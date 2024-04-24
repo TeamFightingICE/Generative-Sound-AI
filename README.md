@@ -5,7 +5,7 @@
 First, install dependencies with pip.
 ```
 pip install -r requirements.txt
-pip install -i https://test.pypi.org/simple/ pyftg==2.1rc6
+pip install git+https://github.com/TeamFightingICE/pyftg@dev
 ```
 
 Run main process

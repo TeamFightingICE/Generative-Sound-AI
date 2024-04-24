@@ -6,15 +6,15 @@ from loguru import logger
 from pyftg.socket.asyncio.generative_sound_gateway import \
     GenerativeSoundGateway
 
-from src.SoundAI import SoundAI
+from src.SampleSoundGenAI import SampleSoundGenAI
 
 app = typer.Typer()
 
 
 async def start_process():
     gateway = GenerativeSoundGateway(port=12345)
-    sound_ai = SoundAI()
-    gateway.set_sound_ai(sound_ai)
+    sound_genai = SampleSoundGenAI()
+    gateway.set_sound_ai(sound_genai)
     await gateway.run()
     await gateway.close()
 

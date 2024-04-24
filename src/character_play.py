@@ -1,7 +1,9 @@
-from pyftg.models.character_data import CharacterData
+from loguru import logger
 from pyftg.models.frame_data import FrameData
-import game_setting
-from sound_manger import SoundManager
+
+from src.sound_manager import SoundManager
+from src.config import STAGE_HEIGHT, STAGE_WIDTH
+
 
 class CharacterPlay:
     character = None
@@ -16,7 +18,7 @@ class CharacterPlay:
 
     temp = None
     temp2 = None
-    pre_energy = None
+    pre_energy = 0
 
     projectile_live = [False] * 3
     projectile_hit = [False] * 3
@@ -38,17 +40,20 @@ class CharacterPlay:
     def update(self, frame_data: FrameData):
         self.character = frame_data.get_character(self.player)
         # check landing
-        if self.character.bottom >= game_setting.STAGE_HEIGHT:
+        if self.character.bottom >= STAGE_HEIGHT:
             pass
             # TODO
         
         # border
-        if self.character.left < 0 or self.character.right > game_setting.STAGE_WIDTH:
+        if self.player:
+            logger.info(f"left: {self.character.left}, right: {self.character.right}")
+        if self.character.left < 0 or self.character.right > STAGE_WIDTH:
+            logger.info("border")
             if not self.sound_manager.is_playing(self.source_border_alert):
                 if self.character.left < 0:
                     self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), 0, 0, False)
                 else:
-                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), game_setting.STAGE_WIDTH, 0, False)
+                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), STAGE_WIDTH, 0, False)
 
         # hp
         if self.character.hp < 50:
@@ -56,7 +61,7 @@ class CharacterPlay:
                 if self.player:
                     self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), 0, 0, False)
                 else:
-                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), game_setting.STAGE_WIDTH, 0, False)
+                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), STAGE_WIDTH, 0, False)
 
         # update temp
         if self.character.state.name != "CROUCH":
@@ -74,7 +79,7 @@ class CharacterPlay:
             if self.player:
                 self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), 0, 0, False)
             else:
-                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), game_setting.STAGE_WIDTH, 0, False)
+                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), STAGE_WIDTH, 0, False)
 
         self.play_action_sound()
 
