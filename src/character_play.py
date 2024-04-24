@@ -25,7 +25,7 @@ class CharacterPlay:
     player = None
 
     def __init__(self, sound_manager: SoundManager, player: bool) -> None:
-        self.character = character
+        # self.character = character
         self.sound_manager = sound_manager
         self.player = player
         self.update_projectile()
