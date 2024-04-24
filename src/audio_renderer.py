@@ -1,4 +1,4 @@
-from openal import alc, al
+
 class SoundRenderer:
     device = None
     context = None
@@ -8,27 +8,25 @@ class SoundRenderer:
         self.context = context
 
     def set(self):
-        alc.alcMakeContextCurrent(self.context)
+        pass
     
     def play(self, source_id, buffer_id):
         self.set()
-        al.alSourcei(source_id, al.AL_BUFFER, buffer_id)
-        al.alSourcePlay(source_id)
 
     def stop(self, source_id):
         set()
-        al.alSourceStop(source_id)
+        
 
     def play(self, source_id, buffer_id, x, y, loop):
         pass
 
     def set_source_gain(self, source_id, gain):
         set()
-        al.alSourcef(source_id, al.AL_GAIN, gain)
+        
 
     def set_source_3f(self, source_id, param, x, y, z):
         set()
-        al.alSource3f(source_id, param, x, y, z)
+        
     
     def delete_source(self, source_id):
         pass
@@ -38,8 +36,7 @@ class SoundRenderer:
 
     def close(self):
         set()
-        alc.alcDestroyContext(self.context)
-        alc.alcCloseDevice(self.device)
+        
 
     def is_playing(self, source_id):
         pass
