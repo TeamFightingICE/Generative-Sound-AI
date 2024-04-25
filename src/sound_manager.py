@@ -27,7 +27,8 @@ class SoundManager:
             return SoundManager._sound_manager
 
     def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
-        logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")
+        if buffer == 'LANDING.wav' or buffer == 'BorderAlert.wav':
+            logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")
 
     def get_buffer(self, file_name: str) -> AudioBuffer:
         return file_name  # for testing purpose

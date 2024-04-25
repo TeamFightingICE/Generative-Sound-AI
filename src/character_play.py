@@ -36,13 +36,14 @@ class CharacterPlay:
         # self.character = character
         self.character = None
         self.opp_character = None
-        self.source_default = AudioSource()
-        self.source_walking = AudioSource()
-        self.source_landing = AudioSource()
-        self.source_project_tiles = [AudioSource()] * 3
-        self.source_energy_change = AudioSource()
-        self.source_border_alert = AudioSource()
-        self.source_heart_beat = AudioSource()
+        self.sound_manager = sound_manager
+        self.source_default = sound_manager.create_source()
+        self.source_walking = sound_manager.create_source()
+        self.source_landing = sound_manager.create_source()
+        self.source_project_tiles = [sound_manager.create_source()] * 3
+        self.source_energy_change = sound_manager.create_source()
+        self.source_border_alert = sound_manager.create_source()
+        self.source_heart_beat = sound_manager.create_source()
 
         self.temp = None
         self.temp2 = None
@@ -52,10 +53,12 @@ class CharacterPlay:
         self.projectile_hit = [False] * 3
         self.sY = [0] * 3
         self.sX = [0] * 3
-        self.sound_manager = sound_manager
         self.player = player
         self.previous_left = -1
         self.previous_bottom = -1
+        self.projectile_live = [False] * 3
+        self.projectile_hit = [False] * 3
+        self.projectile_attack = [None] * 3
 
         self.update_projectile()
         
@@ -103,8 +106,8 @@ class CharacterPlay:
             
         
         # border
-        if self.player:
-            logger.info(f"left: {self.character.left}, right: {self.character.right}")
+        # if self.player:
+        #     logger.info(f"left: {self.character.left}, right: {self.character.right}")
         if self.previous_left == -1:
             self.previous_left = self.character.left
         if (self.character.left == 0 and self.previous_left > 0) or self.character.right > STAGE_WIDTH:
