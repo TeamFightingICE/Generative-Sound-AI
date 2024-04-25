@@ -27,7 +27,7 @@ class SoundManager:
     def get_instance():
         if SoundManager._sound_manager is None:
             SoundManager._sound_manager = SoundManager()
-            return SoundManager._sound_manager
+        return SoundManager._sound_manager
 
     def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
         # if buffer in ['LANDING.wav', 'BorderAlert.wav', 'HitA.wav', 'HitB.wav']:
