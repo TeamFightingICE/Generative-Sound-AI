@@ -11,12 +11,11 @@ from src.sound_manager import SoundManager
 
 
 class SampleSoundGenAI(SoundAIInterface):
-    character_plays: List[CharacterPlay] = []
-    sound_manager: SoundManager = None
-    audio_sample_bytes: bytes = None
 
     def __init__(self):
-        self.sound_manager = SoundManager()
+        self.character_plays: List[CharacterPlay] = []
+        self.audio_sample_bytes: bytes = None
+        self.sound_manager = SoundManager.get_instance()
 
     def initialize(self, game_data: GameData):
         self.character_plays.append(CharacterPlay(self.sound_manager, True))
