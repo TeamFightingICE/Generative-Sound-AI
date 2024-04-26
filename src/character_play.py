@@ -94,11 +94,9 @@ class CharacterPlay:
                 # check being hit
                 if self.opp_character.attack_data.attack_type != 4:
                     if self.opp_character.attack_data.down_prop:
-                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer(str(frame_data.current_frame_number) + "HitB.wav" + str(self.opp_character.attack_data.down_prop)), self.character.x, self.character.y, False)
+                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitB.wav"), self.character.x, self.character.y, False)
                     else:
-                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer(str(frame_data.current_frame_number) + "HitA.wav" + str(self.opp_character.attack_data.down_prop)  + " " + str(self.count)), self.character.x, self.character.y, False)
-        if self.opp_character.attack_data.down_prop:
-            logger.info('prop_down' + str(self.opp_character.attack_data.down_prop))
+                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitA.wav"), self.character.x, self.character.y, False)
 
 
         # check landing
@@ -191,10 +189,10 @@ class CharacterPlay:
     def detection_hit(self, opponent: CharacterData) ->bool:
         if self.character.attack_data is None or opponent.state.name == 'DOWN':
             return False
-        elif opponent.left <= self.character.attack_data.current_hit_area.right and\
-                opponent.right >= self.character.attack_data.current_hit_area.left and\
-                opponent.top <= self.character.attack_data.current_hit_area.bottom and\
-                opponent.bottom >= self.character.attack_data.current_hit_area.top:
+        elif self.character.left <= opponent.attack_data.current_hit_area.right and\
+                self.character.right >= opponent.attack_data.current_hit_area.left and\
+                self.character.top <= opponent.attack_data.current_hit_area.bottom and\
+                self.character.bottom >= opponent.attack_data.current_hit_area.top:
             return True
         return False
 

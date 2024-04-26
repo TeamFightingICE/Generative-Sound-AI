@@ -16,11 +16,11 @@ class SoundManager:
         # load all sounds
         # pass
         self.buffers = {}
-        sound_files = os.listdir(os.path.join('data', 'sounds'))
-        for f in sound_files:
-            full_path = os.path.join('data', 'sounds', f)
-            buffer = self.create_buffer(full_path)
-            self.buffers[f] = buffer
+        # sound_files = os.listdir(os.path.join('data', 'sounds'))
+        # for f in sound_files:
+        #     full_path = os.path.join('data', 'sounds', f)
+        #     buffer = self.create_buffer(full_path)
+        #     self.buffers[f] = buffer
         self.audio_sources = []
 
     @staticmethod
