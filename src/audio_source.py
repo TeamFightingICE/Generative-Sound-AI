@@ -1,5 +1,6 @@
 class AudioSource:
     source_ids = []
+    is_playing: bool = False
 
     def __init__(self, source_ids) -> None:
         self.source_ids = source_ids

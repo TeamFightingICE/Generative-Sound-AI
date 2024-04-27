@@ -1,11 +1,10 @@
-from loguru import logger
 from typing import List
+
+from loguru import logger
 
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
 
-import openal
-import os
 
 class SoundManager:
 
@@ -30,21 +29,21 @@ class SoundManager:
         return SoundManager._sound_manager
 
     def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
-        # if buffer in ['LANDING.wav', 'BorderAlert.wav', 'HitA.wav', 'HitB.wav']:
-        #     logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")
-        if buffer.find('HitA') != -1 or buffer.find('HitB')!= -1:
-            logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")
+        source.is_playing = True  # for testing purpose
+        logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")  # for testing purpose
 
     def get_buffer(self, file_name: str) -> AudioBuffer:
         return file_name  # for testing purpose
 
     def is_playing(self, source: AudioSource) -> bool:
-        return False  # for testing purpose
+        return source.is_playing  # for testing purpose
 
     def stop(self, source: AudioSource) -> None:
-        pass
+        source.is_playing = False  # for testing purpose
+        logger.info("stop()")  # for testing purpose
 
     def set_source_pos(self, source: AudioSource, x: int, y: int) -> None:
+        # logger.info(f"set_source_pos({x}, {y})")  # for testing purpose
         pass
 
     def render_sound(self) -> bytes:
@@ -57,6 +56,7 @@ class SoundManager:
         logger.info('create a new audio source')
         source = AudioSource(0)
         self.audio_sources.append(source)
+        return source
     
     def stop_all(self):
         logger.info('stop all audio sources')

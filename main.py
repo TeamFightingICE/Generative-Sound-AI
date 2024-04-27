@@ -6,7 +6,7 @@ from loguru import logger
 from pyftg.socket.asyncio.generative_sound_gateway import \
     GenerativeSoundGateway
 
-from src.SampleSoundGenAI import SampleSoundGenAI
+from src.core import SampleSoundGenAI
 
 app = typer.Typer()
 

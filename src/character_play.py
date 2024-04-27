@@ -1,158 +1,84 @@
-from loguru import logger
-from pyftg.models.frame_data import FrameData, CharacterData
-from pyftg.models.attack_data import AttackData
 from typing import List
 
-from src.sound_manager import SoundManager
-from src.config import STAGE_HEIGHT, STAGE_WIDTH
+from pyftg.models.attack_data import AttackData
+from pyftg.models.enums.action import Action
+from pyftg.models.enums.state import State
+from pyftg.models.frame_data import CharacterData, FrameData
+
 from src.audio_source import AudioSource
+from src.config import STAGE_HEIGHT, STAGE_WIDTH
+from src.sound_manager import SoundManager
+from src.utils import detection_hit, is_guard
 
 
 class CharacterPlay:
+    sound_manager: SoundManager = SoundManager.get_instance()
+
+    temp: str = ' '
+    temp2: str = ' '
+    pre_energy: int = 0
+    sX: List[int] = [0] * 3
+    sY: List[int] = [0] * 3
+    previous_left: int = -1
+    previous_bottom: int = -1
+    previous_action: str = None
+    heart_beat_flag: bool = False
+
+    player: bool
     character: CharacterData
     opp_character: CharacterData
-    sound_manager: SoundManager
     source_default: AudioSource
     source_walking: AudioSource
     source_landing: AudioSource
-    source_project_tiles: List[AudioSource]
+    source_projectiles: List[AudioSource]
     source_energy_change: AudioSource
     source_border_alert: AudioSource
     source_heart_beat: AudioSource
-    temp: str
-    temp2: str
-    pre_energy: int
-    projectile_live: List[bool]
-    projectile_hit: List[bool]
-    projectile_attack: List[AttackData]
-    sY: List[int]
-    sX: List[int]
-    player: bool
-    previous_left: int
-    previous_bottom: int
 
-
-    def __init__(self, sound_manager: SoundManager, player: bool) -> None:
-        # self.character = character
-        self.character = None
-        self.opp_character = None
-        self.sound_manager = sound_manager
-        self.source_default = sound_manager.create_source()
-        self.source_walking = sound_manager.create_source()
-        self.source_landing = sound_manager.create_source()
-        self.source_project_tiles = [sound_manager.create_source()] * 3
-        self.source_energy_change = sound_manager.create_source()
-        self.source_border_alert = sound_manager.create_source()
-        self.source_heart_beat = sound_manager.create_source()
-
-        self.temp = None
-        self.temp2 = None
-        self.pre_energy = 0
-
-        self.projectile_live = [False] * 3
-        self.projectile_hit = [False] * 3
-        self.sY = [0] * 3
-        self.sX = [0] * 3
+    def __init__(self, player: bool) -> None:
         self.player = player
-        self.previous_left = -1
-        self.previous_bottom = -1
-        self.projectile_live = [False] * 3
-        self.projectile_hit = [False] * 3
-        self.projectile_attack = [None] * 3
-
-        self.update_projectile()
-        self.count = 0
-        
+        self.source_default = self.sound_manager.create_source()
+        self.source_walking = self.sound_manager.create_source()
+        self.source_landing = self.sound_manager.create_source()
+        self.source_projectiles = [self.sound_manager.create_source()] * 3
+        self.source_energy_change = self.sound_manager.create_source()
+        self.source_border_alert = self.sound_manager.create_source()
+        self.source_heart_beat = self.sound_manager.create_source()
 
     def update_projectile(self):
-        # self.character.
-        for i in range(len(self.projectile_attack)):
-            if self.projectile_attack[i] is not None:
-                if self.projectile_live[i]:
-                    if self.projectile_attack[i].current_frame <= self.projectile_attack[i].active:
-                        self.sX[i] += self.projectile_attack[i].speed_x
-                        self.sY[i] += self.projectile_attack[i].speed_y
-                        self.sound_manager.set_source_pos(self.source_project_tiles[i], self.sX[i], self.sY[i])
-                    else:
-                        self.sound_manager.stop(self.source_project_tiles[i])
-            elif self.source_project_tiles is not None:
-                self.sound_manager.stop(self.source_project_tiles[i])
+        projectile_attack = self.character.projectile_attack
+        projectile_live = self.character.projectile_live
+        projectile_hit = self.character.projectile_hit
+        for i in range(len(projectile_attack)):
+            if not projectile_live[i] and self.sound_manager.is_playing(self.source_projectiles[i]):
+                self.sound_manager.stop(self.source_projectiles[i])
+            elif not projectile_attack[i].empty_flag and projectile_live[i]:
+                if projectile_attack[i].current_frame < projectile_attack[i].active and not projectile_hit[i]:
+                    x = (projectile_attack[i].current_hit_area.left + projectile_attack[i].current_hit_area.right) // 2
+                    y = (projectile_attack[i].current_hit_area.top + projectile_attack[i].current_hit_area.bottom) // 2
+                    self.sound_manager.set_source_pos(self.source_projectiles[i], x, y)
 
-        # pass
-
-    def update(self, frame_data: FrameData):
-        
-        self.count += 1
-        self.character = frame_data.get_character(self.player)
-        self.opp_character = frame_data.get_character(not self.player)
-
-        if self.detection_hit(self.opp_character):
-            # check guard
-            if self.is_guard(self.opp_character.attack_data):
-                self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("WeakGuard.wav"), self.character.x, self.character.y, False)
-            else:
-                # check being hit
-                if self.opp_character.attack_data.attack_type != 4:
-                    if self.opp_character.attack_data.down_prop:
-                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitB.wav"), self.character.x, self.character.y, False)
-                    else:
-                        self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitA.wav"), self.character.x, self.character.y, False)
-
-
-        # check landing
-        if self.previous_bottom == -1:
-            self.previous_bottom = self.character.bottom
-        if self.character.bottom >= STAGE_HEIGHT and self.character.bottom != self.previous_bottom:
-            self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("LANDING.wav"), self.character.x, self.character.y, False)
-        self.previous_bottom = self.character.bottom
-            
-        
-        # border
-        # if self.player:
-            # logger.info(f"left: {self.character.left}, right: {self.character.right}")
-        if self.previous_left == -1:
-            self.previous_left = self.character.left
-        if (self.character.left == 0 and self.previous_left > 0) or self.character.right > STAGE_WIDTH:
-            logger.info("border")
-            if not self.sound_manager.is_playing(self.source_border_alert):
-                if self.character.left < 0:
-                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), 0, 0, False)
-                else:
-                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), STAGE_WIDTH, 0, False)
-        self.previous_left = self.character.left
-
-        # hp
-        if self.character.hp < 50:
-            if not self.sound_manager.is_playing(self.source_heart_beat):
-                if self.player:
-                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), 0, 0, False)
-                else:
-                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), STAGE_WIDTH, 0, False)
-
-        # update temp
-        if self.character.state.name != "CROUCH":
-            self.temp = " "
-        if self.character.speed_x == 0 and self.character.state == "AIR":
-            self.temp2 = " "
-            self.sound_manager.stop(self.source_walking)
+    def hit_attack(self, attack: AttackData, opponent: 'CharacterPlay') -> None:
+        if is_guard(self.character.action, attack):  # check guard
+            self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("WeakGuard.wav"), self.character.x, self.character.y, False)
         else:
-            self.sound_manager.set_source_pos(self.source_walking, self.character.x, self.character.y)
-
-        self.update_projectile()
-        # update energy
-        if self.character.energy > self.pre_energy + 50:
-            self.pre_energy = self.character.energy
-            if self.player:
-                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), 0, 0, False)
+            # check being hit
+            if attack.attack_type == 4:
+                if self.character.state not in [State.AIR, State.DOWN]:
+                    self.run_action(Action.THROW_SUFFER)
+                    if not self.opp_character.action is Action.THROW_SUFFER:
+                        opponent.run_action(Action.THROW_HIT)
             else:
-                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), STAGE_WIDTH, 0, False)
+                if attack.down_prop:
+                    self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitB.wav"), self.character.x, self.character.y, False)
+                else:
+                    self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitA.wav"), self.character.x, self.character.y, False)
 
-        self.play_action_sound()
+    def run_action(self, action: Action) -> None:
+        action = self.character.action.name.upper()
+        if action == self.previous_action:
+            return
         
-
-    def play_action_sound(self):
-        # get action
-        action = self.character.action.name
         sound_name = action + '.wav'
         x = self.character.x
         y = self.character.y
@@ -167,53 +93,81 @@ class CharacterPlay:
             if sound_name != self.temp:
                 self.sound_manager.play(self.source_default, self.sound_manager.get_buffer(sound_name), x, y, False)
                 self.temp = sound_name
-        elif action in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
-            for i in range(len(self.projectile_live)):
-                if not self.projectile_live[i]:
-                    self.projectile_live[i] = True
-                    self.sY[i] = y
-                    self.sX[i] = x
-                    self.sound_manager.play(self.source_project_tiles[i], self.sound_manager.get_buffer(sound_name), x, y, True)
-                    break
+        elif action in ["FORWARD_WALK", "DASH", "BACK_STEP"]:
+            if sound_name != self.temp2:
+                self.sound_manager.play(self.source_walking, self.sound_manager.get_buffer(sound_name), x, y, True)
+                self.temp2 = sound_name
+        # elif action in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
+        #     for i in range(len(self.character.projectile_live)):
+        #         if not self.character.projectile_live[i]:
+        #             self.sound_manager.play(self.source_projectiles[i], self.sound_manager.get_buffer(sound_name), x, y, True)
+        #             break
 
-    def round_end(self):
+        self.previous_action = action
+    
+    def check_landing(self):
+        if self.previous_bottom == -1:
+            self.previous_bottom = self.character.bottom
+        if self.character.bottom >= STAGE_HEIGHT and self.character.bottom != self.previous_bottom:
+            self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("LANDING.wav"), self.character.x, self.character.y, False)
+        self.previous_bottom = self.character.bottom
+
+    def check_border_alert(self):
+        if self.previous_left == -1:
+            self.previous_left = self.character.left
+        if (self.character.left == 0 and self.previous_left > 0) or self.character.right > STAGE_WIDTH:
+            if not self.sound_manager.is_playing(self.source_border_alert):
+                if self.character.left < 0:
+                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), 0, 0, False)
+                else:
+                    self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), STAGE_WIDTH, 0, False)
+        self.previous_left = self.character.left
+
+    def check_heart_beat(self):
+        if self.character.hp < 50 and not self.heart_beat_flag:
+            self.heart_beat_flag = True
+            if not self.sound_manager.is_playing(self.source_heart_beat):
+                if self.player:
+                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), 0, 0, False)
+                else:
+                    self.sound_manager.play(self.source_heart_beat, self.sound_manager.get_buffer("Heartbeat.wav"), STAGE_WIDTH, 0, False)
+
+    def check_energy_charge(self):
+        if self.character.energy > self.pre_energy + 50:
+            self.pre_energy = self.character.energy
+            if self.player:
+                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), 0, 0, False)
+            else:
+                self.sound_manager.play(self.source_energy_change, self.sound_manager.get_buffer("EnergyCharge.wav"), STAGE_WIDTH, 0, False)
+    
+    def update(self, frame_data: FrameData):
+        self.character = frame_data.get_character(self.player)
+        self.opp_character = frame_data.get_character(not self.player)
+
+        self.check_landing()
+        self.check_border_alert()
+        self.check_heart_beat()
+        self.check_energy_charge()
+
+        # update temp
+        if not self.character.state is State.CROUCH:
+            self.temp = " "
+        if self.character.speed_x == 0 and self.character.state is State.AIR:
+            self.temp2 = " "
+            self.sound_manager.stop(self.source_walking)
+        else:
+            self.sound_manager.set_source_pos(self.source_walking, self.character.x, self.character.y)
+
+        self.update_projectile()
+        self.run_action(self.character.action)
+
+    def reset(self):
         self.pre_energy = 0
-        self.temp = None
-        self.temp2 = None
+        self.temp = ' '
+        self.temp2 = ' '
         self.sY = [0] * 3
         self.sX = [0] * 3
         self.previous_left = -1
         self.previous_bottom = -1
-        
-
-    def detection_hit(self, opponent: CharacterData) ->bool:
-        if self.character.attack_data is None or opponent.state.name == 'DOWN':
-            return False
-        elif self.character.left <= opponent.attack_data.current_hit_area.right and\
-                self.character.right >= opponent.attack_data.current_hit_area.left and\
-                self.character.top <= opponent.attack_data.current_hit_area.bottom and\
-                self.character.bottom >= opponent.attack_data.current_hit_area.top:
-            return True
-        return False
-
-    def is_guard(self, attack: AttackData) -> bool:
-        # guard = False
-        action = self.character.action.name
-        if action == "STAND_GUARD":
-            if attack.attack_type in [1, 2]:
-                return True
-        if action == "CROUCH_GUARD":
-            if attack.attack_type in [1, 3]:
-                return True
-        if action == "AIR_GUARD":
-            if attack.attack_type in [1, 2]:
-                return True
-        if action == "STAND_GUARD_RECOV":
-            return True
-        if action == "CROUCH_GUARD_RECOV":
-            return True
-        if action == "AIR_GUARD_RECOV":
-            return True
-        return False
-
+        self.heart_beat_flag = False
     
