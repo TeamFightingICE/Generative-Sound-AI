@@ -8,7 +8,7 @@ from pyftg.models.frame_data import CharacterData, FrameData
 from src.audio_source import AudioSource
 from src.config import STAGE_HEIGHT, STAGE_WIDTH
 from src.sound_manager import SoundManager
-from src.utils import detection_hit, is_guard
+from src.utils import is_guard
 
 
 class CharacterPlay:
@@ -16,13 +16,14 @@ class CharacterPlay:
 
     temp: str = ' '
     temp2: str = ' '
+    temp3: str = ' '
+    temp4: str = ' '
     pre_energy: int = 0
-    sX: List[int] = [0] * 3
-    sY: List[int] = [0] * 3
     previous_left: int = -1
     previous_bottom: int = -1
     previous_action: str = None
     heart_beat_flag: bool = False
+    projectile_live: List[bool] = [False] * 3
 
     player: bool
     character: CharacterData
@@ -48,15 +49,14 @@ class CharacterPlay:
     def update_projectile(self):
         projectile_attack = self.character.projectile_attack
         projectile_live = self.character.projectile_live
-        projectile_hit = self.character.projectile_hit
         for i in range(len(projectile_attack)):
-            if not projectile_live[i] and self.sound_manager.is_playing(self.source_projectiles[i]):
+            if not projectile_attack[i].empty_flag and projectile_live[i]:
+                x = (projectile_attack[i].current_hit_area.left + projectile_attack[i].current_hit_area.right) // 2
+                y = (projectile_attack[i].current_hit_area.top + projectile_attack[i].current_hit_area.bottom) // 2
+                self.sound_manager.set_source_pos(self.source_projectiles[i], x, y)
+            elif not projectile_live[i] and self.sound_manager.is_playing(self.source_projectiles[i]):
                 self.sound_manager.stop(self.source_projectiles[i])
-            elif not projectile_attack[i].empty_flag and projectile_live[i]:
-                if projectile_attack[i].current_frame < projectile_attack[i].active and not projectile_hit[i]:
-                    x = (projectile_attack[i].current_hit_area.left + projectile_attack[i].current_hit_area.right) // 2
-                    y = (projectile_attack[i].current_hit_area.top + projectile_attack[i].current_hit_area.bottom) // 2
-                    self.sound_manager.set_source_pos(self.source_projectiles[i], x, y)
+            self.projectile_live[i] = projectile_live[i]
 
     def hit_attack(self, attack: AttackData, opponent: 'CharacterPlay') -> None:
         if is_guard(self.character.action, attack):  # check guard
@@ -75,33 +75,40 @@ class CharacterPlay:
                     self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("HitA.wav"), self.character.x, self.character.y, False)
 
     def run_action(self, action: Action) -> None:
-        action = self.character.action.name.upper()
-        if action == self.previous_action:
-            return
-        
-        sound_name = action + '.wav'
+        action_name = action.name.upper()
+        sound_name = action_name + '.wav'
         x = self.character.x
         y = self.character.y
+
+        if action in [Action.STAND, Action.AIR]:
+            self.temp = ' '
+            self.temp2 = ' '
+            self.temp3 = ' '
+            self.temp4 = ' '
         
-        if action in ["JUMP", "FOR_JUMP", "BACK_JUMP", "THROW_A", "THROW_B", "THROW_HIT", "THROW_SUFFER", 
+        if action_name in ["JUMP", "FOR_JUMP", "BACK_JUMP", "THROW_A", "THROW_B", "THROW_HIT", "THROW_SUFFER", 
                       "STAND_A", "STAND_B", "CROUCH_A", "CROUCH_B", "AIR_A", "AIR_B", "AIR_DA", "AIR_DB", 
                       "STAND_FA", "STAND_FB", "CROUCH_FA", "CROUCH_FB", "AIR_FA", "AIR_FB", "AIR_UA", "AIR_UB", 
                       "STAND_F_D_DFA", "STAND_F_D_DFB", "STAND_D_DB_BA", "STAND_D_DB_BB", "AIR_F_D_DFA", 
                       "AIR_F_D_DFB", "AIR_D_DB_BA", "AIR_D_DB_BB"]:
-            self.sound_manager.play(self.source_default, self.sound_manager.get_buffer(sound_name), x, y, False)
-        elif action == "CROUCH":
+            if sound_name != self.temp3:
+                self.sound_manager.play(self.source_default, self.sound_manager.get_buffer(sound_name), x, y, False)
+                self.temp3 = sound_name
+        elif action_name == "CROUCH":
             if sound_name != self.temp:
                 self.sound_manager.play(self.source_default, self.sound_manager.get_buffer(sound_name), x, y, False)
                 self.temp = sound_name
-        elif action in ["FORWARD_WALK", "DASH", "BACK_STEP"]:
+        elif action_name in ["FORWARD_WALK", "DASH", "BACK_STEP"]:
             if sound_name != self.temp2:
                 self.sound_manager.play(self.source_walking, self.sound_manager.get_buffer(sound_name), x, y, True)
                 self.temp2 = sound_name
-        # elif action in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
-        #     for i in range(len(self.character.projectile_live)):
-        #         if not self.character.projectile_live[i]:
-        #             self.sound_manager.play(self.source_projectiles[i], self.sound_manager.get_buffer(sound_name), x, y, True)
-        #             break
+        elif action_name in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
+            if sound_name != self.temp4:
+                for i in range(len(self.character.projectile_live)):
+                    if not self.character.projectile_live[i]:
+                        self.sound_manager.play(self.source_projectiles[i], self.sound_manager.get_buffer(sound_name), x, y, True)
+                        break
+                self.temp4 = sound_name
 
         self.previous_action = action
     
@@ -154,19 +161,20 @@ class CharacterPlay:
             self.temp = " "
         if self.character.speed_x == 0 and self.character.state is State.AIR:
             self.temp2 = " "
-            self.sound_manager.stop(self.source_walking)
+            if self.sound_manager.is_playing(self.source_walking):
+                self.sound_manager.stop(self.source_walking)
         else:
             self.sound_manager.set_source_pos(self.source_walking, self.character.x, self.character.y)
 
-        self.update_projectile()
         self.run_action(self.character.action)
+        self.update_projectile()
 
     def reset(self):
         self.pre_energy = 0
         self.temp = ' '
         self.temp2 = ' '
-        self.sY = [0] * 3
-        self.sX = [0] * 3
+        self.temp3 = ' '
+        self.temp4 = ' '
         self.previous_left = -1
         self.previous_bottom = -1
         self.heart_beat_flag = False
