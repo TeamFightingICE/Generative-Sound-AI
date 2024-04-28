@@ -9,6 +9,7 @@ from loguru import logger
 from openal import al
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
+from src.config import MUTE_FLAG
 from src.sound_renderer import SoundRenderer
 
 formatmap = {
@@ -29,8 +30,8 @@ class SoundManager:
     virtual_renderer: SoundRenderer = None
 
     def __init__(self) -> None:
-
-        self.sound_renderers.append(SoundRenderer.create_default_renderer())
+        if not MUTE_FLAG:
+            self.sound_renderers.append(SoundRenderer.create_default_renderer())
         self.virtual_renderer = SoundRenderer.create_virtual_renderer()
         self.sound_renderers.append(self.virtual_renderer)
         data_path = Path('data/sounds')
