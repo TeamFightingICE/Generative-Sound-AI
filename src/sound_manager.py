@@ -40,10 +40,11 @@ class SoundManager:
 
     def stop(self, source: AudioSource) -> None:
         source.is_playing = False  # for testing purpose
-        logger.info("stop()")  # for testing purpose
+        # logger.info("stop()")  # for testing purpose
 
     def set_source_pos(self, source: AudioSource, x: int, y: int) -> None:
-        # logger.info(f"set_source_pos({x}, {y})")  # for testing purpose
+        if source == 'self.source_projectiles_by_id[projectile_id]':
+            logger.info(f"{source} set_source_pos({x}, {y})")  # for testing purpose
         pass
 
     def render_sound(self) -> bytes:
@@ -58,6 +59,10 @@ class SoundManager:
         self.audio_sources.append(source)
         return source
     
+    def remove_source(self, source: AudioSource):
+        logger.info('free an audio source')
+        self.audio_sources.remove(source)
+
     def stop_all(self):
         logger.info('stop all audio sources')
         for s in self.audio_sources:
