@@ -1,7 +1,7 @@
 import ctypes
+from typing import List
 
 from openal import al, alc
-from typing import List
 from src.config import SAMPLE_SIZE
 
 ALC_FORMAT_TYPE_SOFT = 6545

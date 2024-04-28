@@ -5,10 +5,10 @@ from pyftg.models.frame_data import FrameData
 from pyftg.models.game_data import GameData
 from pyftg.models.round_result import RoundResult
 
+from src.audio_source import AudioSource
 from src.character_play import CharacterPlay
 from src.sound_manager import SoundManager
 from src.utils import detection_hit
-from src.audio_source import AudioSource
 
 
 class SampleSoundGenAI(SoundGenAIInterface):
@@ -24,6 +24,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
         pass
 
     def init_round(self):
+        self.sound_manager.set_source_gain(self.source_bgm, 0.43)
         self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), 350, 0, True)
 
     def processing_game(self, frame_data: FrameData):

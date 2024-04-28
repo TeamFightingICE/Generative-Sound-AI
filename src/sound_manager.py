@@ -1,12 +1,12 @@
-import array
 import wave
+from array import array
 from pathlib import Path
 from typing import Dict, List
 from wave import Wave_read
 
 from loguru import logger
 
-from openal import al, alc
+from openal import al
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
 from src.sound_renderer import SoundRenderer
@@ -69,12 +69,10 @@ class SoundManager:
             source_id = source.get_source_ids()[i]
             sound_renderer.set_source_3f(source_id, al.AL_POSITION, x, 0, 4)
 
-    def render_sound(self) -> bytes:
-        sample = self.virtual_renderer.sample_audio()
-        sample_flatten = sample[0] + sample[1]
-        float_array = array.array('f', sample_flatten)
-        byte_data = float_array.tobytes()
-        return byte_data
+    def set_source_gain(self, source: AudioSource, gain: float) -> None:
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            sound_renderer.set_source_gain(source_id, min(1.0, max(0.0, gain)))
 
     def create_buffer(self, file_path: Path) -> AudioBuffer:
         buffer_ids = [0] * len(self.sound_renderers)
@@ -116,6 +114,13 @@ class SoundManager:
         al.alSourcef(source, al.AL_ROLLOFF_FACTOR, 0.01)
 
         return source.value
+
+    def render_sound(self) -> bytes:
+        sample = self.virtual_renderer.sample_audio()
+        sample_flatten = sample[0] + sample[1]
+        float_array = array('f', sample_flatten)
+        byte_data = float_array.tobytes()
+        return byte_data
     
     def remove_source(self, source: AudioSource):
         self.audio_sources.remove(source)
