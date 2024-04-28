@@ -24,7 +24,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
         pass
 
     def init_round(self):
-        self.sound_manager.set_source_gain(self.source_bgm, 0.43)
+        self.sound_manager.set_source_gain(self.source_bgm, 1.0)
         self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), 350, 0, True)
 
     def processing_game(self, frame_data: FrameData):

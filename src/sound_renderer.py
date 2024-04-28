@@ -95,9 +95,10 @@ class SoundRenderer:
         al.alGetSourcei(source_id, al.AL_SOURCE_STATE, ctypes.byref(state))
         return state.value == al.AL_PLAYING
 
-    def al_listener_fv(self, param, values) -> None:
+    def al_listener_fv(self, param: int, values: List[float]) -> None:
         self.set()
-        al.alListenerfv(param, values)
+        values_arr = (ctypes.c_float * len(values))(*values)
+        al.alListenerfv(param, values_arr)
 
     def sample_audio(self) -> List[List]:
         self.set()

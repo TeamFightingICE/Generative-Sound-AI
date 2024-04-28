@@ -29,6 +29,7 @@ class SoundManager:
     virtual_renderer: SoundRenderer = None
 
     def __init__(self) -> None:
+
         self.sound_renderers.append(SoundRenderer.create_default_renderer())
         self.virtual_renderer = SoundRenderer.create_virtual_renderer()
         self.sound_renderers.append(self.virtual_renderer)
@@ -36,6 +37,16 @@ class SoundManager:
         for file in data_path.iterdir():
             self.sound_buffers[file.name] = self.create_buffer(file)
         logger.info("Sound effects have been loaded.")
+        self.set_listener_values()
+
+    def set_listener_values(self):
+        listener_pos = [350.0, 0.0, 0.0]
+        listener_vel = [0.0, 0.0, 0.0]
+        listener_ori = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
+        for sound_renderer in self.sound_renderers:
+            sound_renderer.al_listener_fv(al.AL_POSITION, listener_pos)
+            sound_renderer.al_listener_fv(al.AL_VELOCITY, listener_vel)
+            sound_renderer.al_listener_fv(al.AL_ORIENTATION, listener_ori)
 
     @staticmethod
     def get_instance():
