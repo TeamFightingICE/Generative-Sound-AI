@@ -29,7 +29,7 @@ class SoundManager:
         return SoundManager._sound_manager
 
     def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
-        source.is_playing = True  # for testing purpose
+        #source.is_playing = True  # for testing purpose
         logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")  # for testing purpose
 
     def get_buffer(self, file_name: str) -> AudioBuffer:
@@ -54,7 +54,7 @@ class SoundManager:
         return None
     
     def create_source(self) -> AudioSource:
-        logger.info('create a new audio source')
+        # logger.info('create a new audio source')
         source = AudioSource(0)
         self.audio_sources.append(source)
         return source

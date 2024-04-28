@@ -19,8 +19,7 @@ class CharacterPlay:
     temp3: str = ' '
     temp4: str = ' '
     pre_energy: int = 0
-    previous_left: int = -1
-    previous_bottom: int = -1
+    previous_bottom: int = STAGE_HEIGHT
     previous_action: str = None
     heart_beat_flag: bool = False
     current_projectiles: dict = {}
@@ -51,25 +50,25 @@ class CharacterPlay:
         self.source_projectiles_by_id = {}
 
     def update_projectile(self):
-        for projectile_id in self.source_projectiles_by_id.keys():
-            for i in range(len(self.character.projectile_attack)):
-                if self.character.projectile_attack[i].identifier == projectile_id:
-                    x = (self.character.projectile_attack[i].current_hit_area.left + self.character.projectile_attack[i].current_hit_area.right) // 2
-                    y = (self.character.projectile_attack[i].current_hit_area.top + self.character.projectile_attack[i].current_hit_area.bottom) // 2
+        for projectile_id in self.source_projectiles_by_id:
+            for _, proj in enumerate(self.character.projectile_attack):
+                if not proj.empty_flag and proj.identifier == projectile_id:
+                    x = (proj.current_hit_area.left + proj.current_hit_area.right) // 2
+                    y = (proj.current_hit_area.top + proj.current_hit_area.bottom) // 2
                     self.sound_manager.set_source_pos('self.source_projectiles_by_id[projectile_id]', x, y)
-                    break
 
-        for projectile_id in list(self.source_projectiles_by_id.keys()):
-            if projectile_id not in [t.identifier for t in self.character.projectile_attack]:
+        remove_projectiles = []
+        for projectile_id in self.source_projectiles_by_id:
+            if projectile_id not in [t.identifier for t in self.character.projectile_attack if not t.empty_flag]:
                 self.sound_manager.stop(self.source_projectiles_by_id[projectile_id])
                 self.sound_manager.remove_source(self.source_projectiles_by_id[projectile_id])
-                del self.source_projectiles_by_id[projectile_id]
-                del self.current_projectiles[projectile_id]
-        
+                remove_projectiles.append(projectile_id)
 
+        for projectile_id in remove_projectiles:
+            del self.source_projectiles_by_id[projectile_id]
+            del self.current_projectiles[projectile_id]
 
     def hit_attack(self, attack: AttackData, opponent: 'CharacterPlay') -> None:
-
         if is_guard(self.character.action, attack):  # check guard
             self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("WeakGuard.wav"), self.character.x, self.character.y, False)
         else:
@@ -114,35 +113,31 @@ class CharacterPlay:
                 self.sound_manager.play(self.source_walking, self.sound_manager.get_buffer(sound_name), x, y, True)
                 self.temp2 = sound_name
         elif action_name in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
-            for i in range(len(self.character.projectile_attack)):
-                projectile_id = self.character.projectile_attack[i].identifier
-                # add new projectile attack to list
-                if projectile_id not in self.current_projectiles.keys():
-                    self.current_projectiles[projectile_id] = self.character.projectile_attack[i]
-                    if sound_name != self.temp4:
-                        projectile_source = self.sound_manager.create_source()
-                        self.source_projectiles_by_id[projectile_id] = projectile_source
-                        self.sound_manager.play(projectile_source, self.sound_manager.get_buffer(sound_name), x, y, True)
-                        break
-        self.previous_action = action
+            for i, proj in enumerate(self.character.projectile_attack):
+                if not proj.empty_flag:
+                    projectile_id = proj.identifier
+                    # add new projectile attack to list
+                    if projectile_id not in self.current_projectiles.keys():
+                        if sound_name != self.temp4:
+                            self.temp4 = sound_name
+                            self.current_projectiles[projectile_id] = proj
+                            projectile_source = self.sound_manager.create_source()
+                            self.source_projectiles_by_id[projectile_id] = projectile_source
+                            self.sound_manager.play(projectile_source, self.sound_manager.get_buffer(sound_name), x, y, True)
+                            break
     
     def check_landing(self):
-        if self.previous_bottom == -1:
-            self.previous_bottom = self.character.bottom
         if self.character.bottom >= STAGE_HEIGHT and self.character.bottom != self.previous_bottom:
             self.sound_manager.play(self.source_landing, self.sound_manager.get_buffer("LANDING.wav"), self.character.x, self.character.y, False)
         self.previous_bottom = self.character.bottom
 
     def check_border_alert(self):
-        if self.previous_left == -1:
-            self.previous_left = self.character.left
-        if (self.character.left == 0 and self.previous_left > 0) or self.character.right > STAGE_WIDTH:
+        if (self.character.left == 0 and self.character.speed_x < 0) or (self.character.right == STAGE_WIDTH and self.character.speed_x > 0):
             if not self.sound_manager.is_playing(self.source_border_alert):
-                if self.character.left < 0:
+                if self.character.left == 0:
                     self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), 0, 0, False)
                 else:
                     self.sound_manager.play(self.source_border_alert, self.sound_manager.get_buffer("BorderAlert.wav"), STAGE_WIDTH, 0, False)
-        self.previous_left = self.character.left
 
     def check_heart_beat(self):
         if self.character.hp < 50 and not self.heart_beat_flag:
@@ -189,8 +184,7 @@ class CharacterPlay:
         self.temp2 = ' '
         self.temp3 = ' '
         self.temp4 = ' '
-        self.previous_left = -1
-        self.previous_bottom = -1
+        self.previous_bottom = STAGE_HEIGHT
         self.heart_beat_flag = False
         self.current_projectiles = {}
     

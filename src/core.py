@@ -2,6 +2,7 @@ from typing import List
 
 from pyftg.aiinterface.soundgenai_interface import SoundGenAIInterface
 from pyftg.models.frame_data import FrameData
+from pyftg.models.game_data import GameData
 from pyftg.models.round_result import RoundResult
 
 from src.character_play import CharacterPlay
@@ -16,6 +17,9 @@ class SampleSoundGenAI(SoundGenAIInterface):
     def __init__(self):
         self.character_plays.append(CharacterPlay(True))
         self.character_plays.append(CharacterPlay(False))
+
+    def initialize(self, game_data: GameData):
+        pass
 
     def init_round(self):
         print("play BGM")

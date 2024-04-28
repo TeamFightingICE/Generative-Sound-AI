@@ -2,7 +2,6 @@ import asyncio
 
 import typer
 from dotenv import load_dotenv
-from loguru import logger
 from pyftg.socket.asyncio.generative_sound_gateway import \
     GenerativeSoundGateway
 
@@ -21,7 +20,6 @@ async def start_process():
 
 @app.command()
 def main():
-    logger.info("Starting the process")
     asyncio.run(start_process())
 
 
