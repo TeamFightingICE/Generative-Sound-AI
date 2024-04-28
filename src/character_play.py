@@ -167,9 +167,10 @@ class CharacterPlay:
         # update temp
         if not self.character.state is State.CROUCH:
             self.temp = " "
-        if self.character.speed_x == 0 and self.character.state is State.AIR:
+        if self.character.speed_x == 0 or self.character.state is State.AIR:
             self.temp2 = " "
             if self.sound_manager.is_playing(self.source_walking):
+                print('stop sound')
                 self.sound_manager.stop(self.source_walking)
         else:
             self.sound_manager.set_source_pos(self.source_walking, self.character.x, self.character.y)
