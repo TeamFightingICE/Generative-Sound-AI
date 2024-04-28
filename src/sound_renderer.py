@@ -111,4 +111,6 @@ class SoundRenderer:
         for i in range(SAMPLE_SIZE):
             separated_channel_audio[0].append(sampled_audio[0][i])
             separated_channel_audio[1].append(sampled_audio[1][i])
+        separated_channel_audio[0] += [0] * (1024 - SAMPLE_SIZE)
+        separated_channel_audio[1] += [0] * (1024 - SAMPLE_SIZE)
         return separated_channel_audio
