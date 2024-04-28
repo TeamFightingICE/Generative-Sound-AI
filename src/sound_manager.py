@@ -1,3 +1,4 @@
+import array
 import wave
 from pathlib import Path
 from typing import Dict, List
@@ -5,7 +6,7 @@ from wave import Wave_read
 
 from loguru import logger
 
-from openal import al
+from openal import al, alc
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
 from src.sound_renderer import SoundRenderer
@@ -25,9 +26,12 @@ class SoundManager:
     audio_sources: List[AudioSource] = []
     audio_buffers: List[AudioBuffer] = []
     sound_buffers: Dict[str, AudioBuffer] = {}
+    virtual_renderer: SoundRenderer = None
 
     def __init__(self) -> None:
         self.sound_renderers.append(SoundRenderer.create_default_renderer())
+        self.virtual_renderer = SoundRenderer.create_virtual_renderer()
+        self.sound_renderers.append(self.virtual_renderer)
         data_path = Path('data/sounds')
         for file in data_path.iterdir():
             self.sound_buffers[file.name] = self.create_buffer(file)
@@ -66,7 +70,11 @@ class SoundManager:
             sound_renderer.set_source_3f(source_id, al.AL_POSITION, x, 0, 4)
 
     def render_sound(self) -> bytes:
-        return bytes(8192)  # for testing purpose
+        sample = self.virtual_renderer.sample_audio()
+        sample_flatten = sample[0] + sample[1]
+        float_array = array.array('f', sample_flatten)
+        byte_data = float_array.tobytes()
+        return byte_data
 
     def create_buffer(self, file_path: Path) -> AudioBuffer:
         buffer_ids = [0] * len(self.sound_renderers)
