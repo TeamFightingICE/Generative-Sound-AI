@@ -30,6 +30,13 @@ class SampleSoundGenAI(SoundGenAIInterface):
         for i in range(2):
             player_number = i == 0
             opponent_index = 1 if player_number else 0
+            projectiles = frame_data.get_character(player_number).projectile_attack
+            for p in projectiles:
+                if detection_hit(frame_data.get_character(not player_number), p):
+                    self.character_plays[i].hit_attack(p, self.character_plays[opponent_index])
+        for i in range(2):
+            player_number = i == 0
+            opponent_index = 1 if player_number else 0
             attack = frame_data.get_character(player_number).attack_data
             if detection_hit(frame_data.get_character(not player_number), attack):
                 self.character_plays[i].hit_attack(attack, self.character_plays[opponent_index])
