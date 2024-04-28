@@ -27,7 +27,7 @@ class SoundManager:
     sound_buffers: Dict[str, AudioBuffer] = {}
 
     def __init__(self) -> None:
-        self.sound_renderers.append(SoundRenderer.createDefaultRenderer())
+        self.sound_renderers.append(SoundRenderer.create_default_renderer())
         data_path = Path('data/sounds')
         for file in data_path.iterdir():
             self.sound_buffers[file.name] = self.create_buffer(file)
@@ -46,7 +46,6 @@ class SoundManager:
             sound_renderer.play(source_id, buffer_id, x, y, loop)
 
     def get_sound_buffer(self, sound_name: str) -> AudioBuffer:
-        print(sound_name)
         return self.sound_buffers.get(sound_name)
 
     def is_playing(self, source: AudioSource) -> bool:
@@ -111,10 +110,8 @@ class SoundManager:
         return source.value
     
     def remove_source(self, source: AudioSource):
-        logger.info('free an audio source')
         self.audio_sources.remove(source)
 
     def stop_all(self):
-        logger.info('stop all audio sources')
-        for s in self.audio_sources:
-            self.stop(s)
+        for audio_source in self.audio_sources:
+            self.stop(audio_source)

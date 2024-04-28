@@ -12,7 +12,7 @@ class SoundRenderer:
         self.context = context
 
     @staticmethod
-    def createDefaultRenderer():
+    def create_default_renderer():
         device = alc.alcOpenDevice(None)
         context = alc.alcCreateContext(device, None)
         alc.alcMakeContextCurrent(context)
