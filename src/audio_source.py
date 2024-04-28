@@ -7,6 +7,3 @@ class AudioSource:
     
     def get_source_ids(self):
         return self.source_ids
-    
-    def close():
-        pass
