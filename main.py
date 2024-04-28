@@ -7,7 +7,7 @@ from pyftg.socket.asyncio.generative_sound_gateway import \
 
 from src.core import SampleSoundGenAI
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False)
 
 
 async def start_process():

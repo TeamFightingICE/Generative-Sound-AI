@@ -1,63 +1,114 @@
-from typing import List
+import wave
+from pathlib import Path
+from typing import Dict, List
+from wave import Wave_read
 
 from loguru import logger
 
+from openal import al
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
+from src.sound_renderer import SoundRenderer
+
+formatmap = {
+    (1, 8) : al.AL_FORMAT_MONO8,
+    (2, 8) : al.AL_FORMAT_STEREO8,
+    (1, 16): al.AL_FORMAT_MONO16,
+    (2, 16) : al.AL_FORMAT_STEREO16,
+}
 
 
 class SoundManager:
+    _instance = None
 
-    _sound_manager = None
-    audio_sources: List[AudioSource]
+    sound_renderers: List[SoundRenderer] = []
+    audio_sources: List[AudioSource] = []
+    audio_buffers: List[AudioBuffer] = []
+    sound_buffers: Dict[str, AudioBuffer] = {}
 
     def __init__(self) -> None:
-        # load all sounds
-        # pass
-        self.buffers = {}
-        # sound_files = os.listdir(os.path.join('data', 'sounds'))
-        # for f in sound_files:
-        #     full_path = os.path.join('data', 'sounds', f)
-        #     buffer = self.create_buffer(full_path)
-        #     self.buffers[f] = buffer
-        self.audio_sources = []
+        self.sound_renderers.append(SoundRenderer.createDefaultRenderer())
+        data_path = Path('data/sounds')
+        for file in data_path.iterdir():
+            self.sound_buffers[file.name] = self.create_buffer(file)
+        logger.info("Sound effects have been loaded.")
 
     @staticmethod
     def get_instance():
-        if SoundManager._sound_manager is None:
-            SoundManager._sound_manager = SoundManager()
-        return SoundManager._sound_manager
+        if SoundManager._instance is None:
+            SoundManager._instance = SoundManager()
+        return SoundManager._instance
 
     def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
-        #source.is_playing = True  # for testing purpose
-        logger.info(f"Playing {buffer} at {x}, {y} with loop {loop}")  # for testing purpose
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            buffer_id = buffer.get_buffers()[i]
+            sound_renderer.play(source_id, buffer_id, x, y, loop)
 
-    def get_buffer(self, file_name: str) -> AudioBuffer:
-        return file_name  # for testing purpose
+    def get_sound_buffer(self, sound_name: str) -> AudioBuffer:
+        print(sound_name)
+        return self.sound_buffers.get(sound_name)
 
     def is_playing(self, source: AudioSource) -> bool:
-        return source.is_playing  # for testing purpose
+        ans = False
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            ans = ans or sound_renderer.is_playing(source_id)
+        return ans
 
     def stop(self, source: AudioSource) -> None:
-        source.is_playing = False  # for testing purpose
-        # logger.info("stop()")  # for testing purpose
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            sound_renderer.stop(source_id)
 
     def set_source_pos(self, source: AudioSource, x: int, y: int) -> None:
-        if source == 'self.source_projectiles_by_id[projectile_id]':
-            logger.info(f"{source} set_source_pos({x}, {y})")  # for testing purpose
-        pass
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            sound_renderer.set_source_3f(source_id, al.AL_POSITION, x, 0, 4)
 
     def render_sound(self) -> bytes:
         return bytes(8192)  # for testing purpose
 
-    def create_buffer(self, sound_file: str) -> AudioBuffer:
-        return None
+    def create_buffer(self, file_path: Path) -> AudioBuffer:
+        buffer_ids = [0] * len(self.sound_renderers)
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            sound_renderer.set()
+            buffer_ids[i] = self.register_sound(file_path)
+        audio_buffer = AudioBuffer(buffer_ids)
+        self.audio_buffers.append(audio_buffer)
+        return audio_buffer
+        
+    def register_sound(self, file_path: Path) -> int:
+        buffer = al.ALuint(0)
+        al.alGenBuffers(1, buffer)
+
+        wavefp: Wave_read = wave.open(str(file_path), 'rb')
+        channels = wavefp.getnchannels()
+        bitrate = wavefp.getsampwidth() * 8
+        samplerate = wavefp.getframerate()
+        wavbuf = wavefp.readframes(wavefp.getnframes())
+        alformat = formatmap[(channels, bitrate)]
+        al.alBufferData(buffer, alformat, wavbuf, len(wavbuf), samplerate)
+
+        wavefp.close()
+        return buffer.value
     
-    def create_source(self) -> AudioSource:
-        # logger.info('create a new audio source')
-        source = AudioSource(0)
-        self.audio_sources.append(source)
-        return source
+    def create_audio_source(self) -> AudioSource:
+        source_ids = [0] * len(self.sound_renderers)
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            sound_renderer.set()
+            source_ids[i] = self.create_source()
+        audio_source = AudioSource(source_ids)
+        self.audio_sources.append(audio_source)
+        return audio_source
+    
+    def create_source(self) -> int:
+        source = al.ALuint(0)
+        al.alGenSources(1, source)
+
+        al.alSourcef(source, al.AL_ROLLOFF_FACTOR, 0.01)
+
+        return source.value
     
     def remove_source(self, source: AudioSource):
         logger.info('free an audio source')
