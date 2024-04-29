@@ -1,6 +1,8 @@
 import ctypes
 from typing import List
 
+import numpy as np
+
 from openal import al, alc
 from src.config import SAMPLE_SIZE
 
@@ -10,6 +12,12 @@ ALC_FORMAT_CHANNELS_SOFT = 6544
 ALC_STEREO_SOFT = 5377
 ALC_FREQUENCY = 4103
 SOUND_SAMPLING_RATE = 48000
+
+
+def c_ulong(data: int) -> ctypes.c_ulong:
+    arg_value = ctypes.c_ulong(data)
+    arg_ptr = ctypes.byref(arg_value)
+    return arg_ptr
 
 
 class SoundRenderer:
@@ -40,7 +48,7 @@ class SoundRenderer:
     def set(self):
         alc.alcMakeContextCurrent(self.context)
 
-    def setListenerData(self):
+    def set_listener_data(self):
         self.set()
         al.alListener3f(al.AL_POSITION, 0, 0, 0)
         al.alListener3f(al.AL_VELOCITY, 0, 0, 0)
@@ -72,17 +80,17 @@ class SoundRenderer:
         self.set()
         al.alSourcef(source_id, al.AL_GAIN, gain)
 
-    def set_source_3f(self, source_id: int, param, x: int, y: int, z: int) -> None:
+    def set_source_3f(self, source_id: int, param: int, x: int, y: int, z: int) -> None:
         self.set()
         al.alSource3f(source_id, param, x, y, z)
 
     def delete_source(self, source_id: int) -> None:
         self.set()
-        al.alDeleteSources(source_id)
+        al.alDeleteSources(1, c_ulong(source_id))
 
     def delete_buffer(self, buffer_id: int) -> None:
         self.set()
-        al.alDeleteBuffers(buffer_id)
+        al.alDeleteBuffers(1, c_ulong(buffer_id))
 
     def close(self):
         self.set()
@@ -100,7 +108,7 @@ class SoundRenderer:
         values_arr = (ctypes.c_float * len(values))(*values)
         al.alListenerfv(param, values_arr)
 
-    def sample_audio(self) -> List[List]:
+    def sample_audio(self) -> np.ndarray[np.float32]:
         self.set()
         audio_data_type = ctypes.c_float * SAMPLE_SIZE * 2
         audio_sample = audio_data_type()
@@ -108,10 +116,8 @@ class SoundRenderer:
 
         alc.alcRenderSamplesSOFT(self.device, audio_sample_pointer, al.ALsizei(SAMPLE_SIZE))
         sampled_audio = list(ctypes.cast(audio_sample_pointer, ctypes.POINTER(audio_data_type)).contents)
-        separated_channel_audio = [[], []]
-        for i in range(SAMPLE_SIZE):
-            separated_channel_audio[0].append(sampled_audio[0][i])
-            separated_channel_audio[1].append(sampled_audio[1][i])
-        separated_channel_audio[0] += [0] * (1024 - SAMPLE_SIZE)
-        separated_channel_audio[1] += [0] * (1024 - SAMPLE_SIZE)
+
+        separated_channel_audio = np.zeros((2, 1024))
+        separated_channel_audio[0, :SAMPLE_SIZE] = sampled_audio[0]
+        separated_channel_audio[1, :SAMPLE_SIZE] = sampled_audio[1]
         return separated_channel_audio

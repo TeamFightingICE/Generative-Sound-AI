@@ -2,14 +2,13 @@ import wave
 from array import array
 from pathlib import Path
 from typing import Dict, List
-from wave import Wave_read
 
 from loguru import logger
 
 from openal import al
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
-from src.config import MUTE_FLAG
+from src.config import ENABLE_AUDIO_OUTPUT, ENABLE_VIRTUAL_AUDIO
 from src.sound_renderer import SoundRenderer
 
 formatmap = {
@@ -30,14 +29,21 @@ class SoundManager:
     virtual_renderer: SoundRenderer = None
 
     def __init__(self) -> None:
-        if not MUTE_FLAG:
+        if ENABLE_AUDIO_OUTPUT:
             self.sound_renderers.append(SoundRenderer.create_default_renderer())
-        self.virtual_renderer = SoundRenderer.create_virtual_renderer()
-        self.sound_renderers.append(self.virtual_renderer)
+
+        if ENABLE_VIRTUAL_AUDIO:
+            self.virtual_renderer = SoundRenderer.create_virtual_renderer()
+            self.sound_renderers.append(self.virtual_renderer)
+
+        if len(self.sound_renderers) == 0:
+            raise ValueError("No audio renderer has been created.")
+        
         data_path = Path('data/sounds')
         for file in data_path.iterdir():
             self.sound_buffers[file.name] = self.create_buffer(file)
         logger.info("Sound effects have been loaded.")
+
         self.set_listener_values()
 
     def set_listener_values(self):
@@ -99,7 +105,7 @@ class SoundManager:
         buffer = al.ALuint(0)
         al.alGenBuffers(1, buffer)
 
-        wavefp: Wave_read = wave.open(str(file_path), 'rb')
+        wavefp = wave.open(str(file_path), 'rb')
         channels = wavefp.getnchannels()
         bitrate = wavefp.getsampwidth() * 8
         samplerate = wavefp.getframerate()
@@ -122,21 +128,29 @@ class SoundManager:
     def create_source(self) -> int:
         source = al.ALuint(0)
         al.alGenSources(1, source)
-
         al.alSourcef(source, al.AL_ROLLOFF_FACTOR, 0.01)
-
         return source.value
 
     def render_sound(self) -> bytes:
-        sample = self.virtual_renderer.sample_audio()
-        sample_flatten = sample[0] + sample[1]
-        float_array = array('f', sample_flatten)
+        audio_sample = self.virtual_renderer.sample_audio()
+        float_array = array('f', audio_sample.flatten())
         byte_data = float_array.tobytes()
         return byte_data
     
     def remove_source(self, source: AudioSource):
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            source_id = source.get_source_ids()[i]
+            sound_renderer.delete_source(source_id)
         self.audio_sources.remove(source)
 
     def stop_all(self):
         for audio_source in self.audio_sources:
             self.stop(audio_source)
+
+    def close(self):
+        for i, sound_renderer in enumerate(self.sound_renderers):
+            for audio_buffer in self.audio_buffers:
+                sound_renderer.delete_buffer(audio_buffer.get_buffers()[i])
+            for audio_source in self.audio_sources:
+                sound_renderer.delete_source(audio_source.get_source_ids()[i])
+            sound_renderer.close()

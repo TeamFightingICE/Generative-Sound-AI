@@ -7,18 +7,19 @@ from pyftg.models.round_result import RoundResult
 
 from src.audio_source import AudioSource
 from src.character_play import CharacterPlay
+from src.config import ENABLE_VIRTUAL_AUDIO
 from src.sound_manager import SoundManager
 from src.utils import detection_hit
 
 
 class SampleSoundGenAI(SoundGenAIInterface):
     sound_manager: SoundManager = SoundManager.get_instance()
-    character_plays: List[CharacterPlay] = []
     source_bgm: AudioSource = sound_manager.create_audio_source()
+    character_plays: List[CharacterPlay] = []
 
     def __init__(self):
-        self.character_plays.append(CharacterPlay(True))
-        self.character_plays.append(CharacterPlay(False))
+        self.character_plays.append(CharacterPlay(player=True))
+        self.character_plays.append(CharacterPlay(player=False))
 
     def initialize(self, game_data: GameData):
         pass
@@ -45,12 +46,17 @@ class SampleSoundGenAI(SoundGenAIInterface):
             self.character_plays[i].update(frame_data)
 
     def round_end(self, round_result: RoundResult):
-        self.sound_manager.stop_all()
         for i in range(2):
             self.character_plays[i].reset()
+        self.sound_manager.stop(self.source_bgm)
+        self.sound_manager.stop_all()
 
     def game_end(self):
-        pass
+        self.sound_manager.close()
 
     def audio_sample(self) -> bytes:
-        return self.sound_manager.render_sound()
+        if ENABLE_VIRTUAL_AUDIO:
+            sample = self.sound_manager.render_sound()
+        else:
+            sample = bytes(8192)
+        return sample
