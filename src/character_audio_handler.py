@@ -16,6 +16,7 @@ class CharacterAudioHandler:
     current_frame_number: int = 0
     temp: str = ' '
     temp2: str = ' '
+    temp3: str = ' '
     pre_energy: int = 0
     previous_bottom: int = STAGE_HEIGHT
     previous_action: str = None
@@ -93,34 +94,37 @@ class CharacterAudioHandler:
         action_name = action.name.upper()
         sound_name = action_name + '.wav'
 
-        if sound_name == self.temp:
-            return
-
         x = self.character.x
         y = self.character.y
 
         if action_name in ["STAND", "AIR"]:
             self.temp = ' '
             self.temp2 = ' '
+            self.temp3 = ' '
         
         if action_name in ["JUMP", "FOR_JUMP", "BACK_JUMP", "THROW_A", "THROW_B", "THROW_HIT", "THROW_SUFFER", 
                       "STAND_A", "STAND_B", "CROUCH_A", "CROUCH_B", "AIR_A", "AIR_B", "AIR_DA", "AIR_DB", 
                       "STAND_FA", "STAND_FB", "CROUCH_FA", "CROUCH_FB", "AIR_FA", "AIR_FB", "AIR_UA", "AIR_UB", 
                       "STAND_F_D_DFA", "STAND_F_D_DFB", "STAND_D_DB_BA", "STAND_D_DB_BB", "AIR_F_D_DFA", 
                       "AIR_F_D_DFB", "AIR_D_DB_BA", "AIR_D_DB_BB"]:
-            self.sound_manager.play(self.source_default, self.sound_manager.get_sound_buffer(sound_name), x, y, False)
-            logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
-            self.temp = sound_name
+            if sound_name != self.temp3:
+                self.sound_manager.play(self.source_default, self.sound_manager.get_sound_buffer(sound_name), x, y, False)
+                logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
+                self.temp3 = sound_name
         elif action_name == "CROUCH":
-            self.sound_manager.play(self.source_default, self.sound_manager.get_sound_buffer(sound_name), x, y, False)
-            logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
-            self.temp = sound_name
+            self.temp3 = ' '
+            if sound_name != self.temp:
+                self.sound_manager.play(self.source_default, self.sound_manager.get_sound_buffer(sound_name), x, y, False)
+                logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
+                self.temp = sound_name
         elif action_name in ["FORWARD_WALK", "DASH", "BACK_STEP"]:
             if sound_name != self.temp2:
                 self.sound_manager.play(self.source_walking, self.sound_manager.get_sound_buffer(sound_name), x, y, True)
                 logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
                 self.temp2 = sound_name
         elif action_name in ["STAND_D_DF_FA", "STAND_D_DF_FB", "AIR_D_DF_FA", "AIR_D_DF_FB", "STAND_D_DF_FC"]:
+            if sound_name == self.temp3:
+                return
             for i, proj in enumerate(self.character.projectile_attack):
                 if not proj.empty_flag:
                     projectile_id = proj.identifier
@@ -130,7 +134,7 @@ class CharacterAudioHandler:
                         self.source_projectiles_by_id[projectile_id] = projectile_source
                         self.sound_manager.play(projectile_source, self.sound_manager.get_sound_buffer(sound_name), x, y, True)
                         logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
-                        self.temp = sound_name
+                        self.temp3 = sound_name
                         break
     
     def check_landing(self):
@@ -180,6 +184,8 @@ class CharacterAudioHandler:
         self.check_heart_beat()
         self.check_energy_charge()
 
+        if not self.character.state is State.CROUCH:
+            self.temp = " "
         if self.character.speed_x == 0 or self.character.state is State.AIR:
             self.temp2 = " "
             if self.sound_manager.is_playing(self.source_walking):
@@ -196,6 +202,7 @@ class CharacterAudioHandler:
         self.pre_energy = 0
         self.temp = ' '
         self.temp2 = ' '
+        self.temp3 = ' '
         self.previous_bottom = STAGE_HEIGHT
         self.heart_beat_flag = False
         self.current_projectiles = {}
