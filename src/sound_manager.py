@@ -31,22 +31,18 @@ class SoundManager:
     def __init__(self) -> None:
         if ENABLE_AUDIO_OUTPUT:
             self.sound_renderers.append(SoundRenderer.create_default_renderer())
-
         if ENABLE_VIRTUAL_AUDIO:
             self.virtual_renderer = SoundRenderer.create_virtual_renderer()
             self.sound_renderers.append(self.virtual_renderer)
-
         if len(self.sound_renderers) == 0:
             raise ValueError("No audio renderer has been created.")
-        
         data_path = Path('data/sounds')
         for file in data_path.iterdir():
             self.sound_buffers[file.name] = self.create_buffer(file)
         logger.info("Sound effects have been loaded.")
-
         self.set_listener_values()
 
-    def set_listener_values(self):
+    def set_listener_values(self) -> None:
         listener_pos = [350.0, 0.0, 0.0]
         listener_vel = [0.0, 0.0, 0.0]
         listener_ori = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
@@ -61,7 +57,7 @@ class SoundManager:
             SoundManager._instance = SoundManager()
         return SoundManager._instance
 
-    def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool):
+    def play(self, source: AudioSource, buffer: AudioBuffer, x: int, y: int, loop: bool) -> None:
         for i, sound_renderer in enumerate(self.sound_renderers):
             source_id = source.get_source_ids()[i]
             buffer_id = buffer.get_buffers()[i]
@@ -104,7 +100,6 @@ class SoundManager:
     def register_sound(self, file_path: Path) -> int:
         buffer = al.ALuint(0)
         al.alGenBuffers(1, buffer)
-
         wavefp = wave.open(str(file_path), 'rb')
         channels = wavefp.getnchannels()
         bitrate = wavefp.getsampwidth() * 8
@@ -112,7 +107,6 @@ class SoundManager:
         wavbuf = wavefp.readframes(wavefp.getnframes())
         alformat = formatmap[(channels, bitrate)]
         al.alBufferData(buffer, alformat, wavbuf, len(wavbuf), samplerate)
-
         wavefp.close()
         return buffer.value
     
@@ -137,17 +131,17 @@ class SoundManager:
         byte_data = float_array.tobytes()
         return byte_data
     
-    def remove_source(self, source: AudioSource):
+    def remove_source(self, source: AudioSource) -> None:
         for i, sound_renderer in enumerate(self.sound_renderers):
             source_id = source.get_source_ids()[i]
             sound_renderer.delete_source(source_id)
         self.audio_sources.remove(source)
 
-    def stop_all(self):
+    def stop_all(self) -> None:
         for audio_source in self.audio_sources:
             self.stop(audio_source)
 
-    def close(self):
+    def close(self) -> None:
         for i, sound_renderer in enumerate(self.sound_renderers):
             for audio_buffer in self.audio_buffers:
                 sound_renderer.delete_buffer(audio_buffer.get_buffers()[i])

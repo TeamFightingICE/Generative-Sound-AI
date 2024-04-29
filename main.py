@@ -1,7 +1,9 @@
 import asyncio
+from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
+from loguru import logger
 from pyftg.socket.asyncio.generative_sound_gateway import \
     GenerativeSoundGateway
 
@@ -25,4 +27,6 @@ def main():
 
 if __name__ == "__main__":
     load_dotenv()
+    Path("logs").mkdir(exist_ok=True)
+    logger.add("logs/{time}.log")
     app()

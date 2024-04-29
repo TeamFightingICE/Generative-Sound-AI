@@ -45,10 +45,10 @@ class SoundRenderer:
         context = alc.alcCreateContext(device, attrs_c)
         return SoundRenderer(device, context)
 
-    def set(self):
+    def set(self) -> None:
         alc.alcMakeContextCurrent(self.context)
 
-    def set_listener_data(self):
+    def set_listener_data(self) -> None:
         self.set()
         al.alListener3f(al.AL_POSITION, 0, 0, 0)
         al.alListener3f(al.AL_VELOCITY, 0, 0, 0)
@@ -58,7 +58,7 @@ class SoundRenderer:
         al.alSourcei(source_id, al.AL_BUFFER, buffer_id)
         al.alSourcePlay(source_id)
 
-    def stop(self, source_id: int):
+    def stop(self, source_id: int) -> None:
         self.set()
         if self.is_playing(source_id):
             al.alSourceStop(source_id)
@@ -92,7 +92,7 @@ class SoundRenderer:
         self.set()
         al.alDeleteBuffers(1, c_ulong(buffer_id))
 
-    def close(self):
+    def close(self) -> None:
         self.set()
         alc.alcDestroyContext(self.context)
         alc.alcCloseDevice(self.device)
