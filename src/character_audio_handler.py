@@ -206,5 +206,9 @@ class CharacterAudioHandler:
         self.previous_bottom = STAGE_HEIGHT
         self.heart_beat_flag = False
         self.current_projectiles = {}
+        for source in self.source_projectiles_by_id.values():
+            self.sound_manager.stop(source)
+            self.sound_manager.remove_source(source)
+        self.source_projectiles_by_id = {}
         logger.info("Reset character data")
     
