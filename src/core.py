@@ -58,8 +58,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
         logger.info("Stop all sound")
 
     def game_end(self):
-        self.sound_manager.close()
-        logger.info("Close sound manager")
+        logger.info("Game end")
 
     def audio_sample(self) -> bytes:
         if ENABLE_VIRTUAL_AUDIO:
@@ -67,3 +66,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
         else:
             sample = bytes(8192)
         return sample
+    
+    def close(self):
+        self.sound_manager.close()
+        logger.info("Close sound manager")
