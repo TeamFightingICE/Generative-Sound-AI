@@ -4,20 +4,9 @@ from typing import List
 import numpy as np
 
 from openal import al, alc
-from src.config import SAMPLE_SIZE
-
-ALC_FORMAT_TYPE_SOFT = 6545
-ALC_FLOAT_SOFT = 5126
-ALC_FORMAT_CHANNELS_SOFT = 6544
-ALC_STEREO_SOFT = 5377
-ALC_FREQUENCY = 4103
-SOUND_SAMPLING_RATE = 48000
-
-
-def c_ulong(data: int) -> ctypes.c_ulong:
-    arg_value = ctypes.c_ulong(data)
-    arg_ptr = ctypes.byref(arg_value)
-    return arg_ptr
+from src.config import (ALC_FLOAT_SOFT, ALC_FORMAT_CHANNELS_SOFT,
+                        ALC_FORMAT_TYPE_SOFT, ALC_FREQUENCY, ALC_STEREO_SOFT,
+                        SAMPLE_SIZE, SOUND_SAMPLING_RATE)
 
 
 class SoundRenderer:
@@ -86,11 +75,11 @@ class SoundRenderer:
 
     def delete_source(self, source_id: int) -> None:
         self.set()
-        al.alDeleteSources(1, c_ulong(source_id))
+        al.alDeleteSources(1, ctypes.c_uint(source_id))
 
     def delete_buffer(self, buffer_id: int) -> None:
         self.set()
-        al.alDeleteBuffers(1, c_ulong(buffer_id))
+        al.alDeleteBuffers(1, ctypes.c_uint(buffer_id))
 
     def close(self) -> None:
         self.set()
