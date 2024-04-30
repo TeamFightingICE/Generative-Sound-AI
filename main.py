@@ -1,13 +1,12 @@
 import asyncio
-from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
-from loguru import logger
 from pyftg.socket.asyncio.generative_sound_gateway import \
     GenerativeSoundGateway
 
 from src.core import SampleSoundGenAI
+from src.utils import setup_logging
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
@@ -15,7 +14,7 @@ app = typer.Typer(pretty_exceptions_enable=False)
 async def start_process():
     gateway = GenerativeSoundGateway(port=12345)
     sound_genai = SampleSoundGenAI()
-    gateway.set_sound_ai(sound_genai)
+    gateway.register(sound_genai)
     await gateway.run()
     await gateway.close()
 
@@ -27,6 +26,5 @@ def main():
 
 if __name__ == "__main__":
     load_dotenv()
-    Path("logs").mkdir(exist_ok=True)
-    logger.add("logs/{time}.log")
+    setup_logging()
     app()
