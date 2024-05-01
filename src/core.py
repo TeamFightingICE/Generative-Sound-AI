@@ -8,7 +8,7 @@ from pyftg.models.round_result import RoundResult
 
 from src.audio_source import AudioSource
 from src.character_audio_handler import CharacterAudioHandler
-from src.config import ENABLE_VIRTUAL_AUDIO
+from src.config import ENABLE_VIRTUAL_AUDIO, STAGE_WIDTH
 from src.sound_manager import SoundManager
 from src.utils import detection_hit
 
@@ -29,8 +29,8 @@ class SampleSoundGenAI(SoundGenAIInterface):
 
     def init_round(self):
         self.sound_manager.set_source_gain(self.source_bgm, 1.0)
-        self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), 350, 0, True)
-        logger.info("Play sound: BGM0.wav at (350, 0) with loop=True")
+        self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), STAGE_WIDTH // 2, 0, True)
+        logger.info(f"Play sound: BGM0.wav at ({STAGE_WIDTH // 2}, 0) with loop=True")
 
     def processing_game(self, frame_data: FrameData):
         for i in range(2):
@@ -62,10 +62,9 @@ class SampleSoundGenAI(SoundGenAIInterface):
 
     def audio_sample(self) -> bytes:
         if ENABLE_VIRTUAL_AUDIO:
-            sample = self.sound_manager.render_sound()
-        else:
-            sample = bytes(8192)
-        return sample
+            audio_sample = self.sound_manager.sample_audio()
+            return audio_sample.tobytes()
+        return bytes(8192)
     
     def close(self):
         self.sound_manager.close()

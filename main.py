@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import typer
 from dotenv import load_dotenv
@@ -25,6 +26,7 @@ def main():
 
 
 if __name__ == "__main__":
+    Path("logs").mkdir(exist_ok=True)
     load_dotenv()
     setup_logging()
     app()

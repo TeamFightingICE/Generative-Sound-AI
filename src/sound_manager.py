@@ -1,14 +1,14 @@
 import wave
-from array import array
 from pathlib import Path
 from typing import Dict, List
 
+import numpy as np
 from loguru import logger
 
 from openal import al
 from src.audio_buffer import AudioBuffer
 from src.audio_source import AudioSource
-from src.config import ENABLE_AUDIO_OUTPUT, ENABLE_VIRTUAL_AUDIO
+from src.config import ENABLE_AUDIO_OUTPUT, ENABLE_VIRTUAL_AUDIO, STAGE_WIDTH
 from src.sound_renderer import SoundRenderer
 
 formatmap = {
@@ -43,7 +43,7 @@ class SoundManager:
         self.set_listener_values()
 
     def set_listener_values(self) -> None:
-        listener_pos = [350.0, 0.0, 0.0]
+        listener_pos = [STAGE_WIDTH / 2, 0.0, 0.0]
         listener_vel = [0.0, 0.0, 0.0]
         listener_ori = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
         for sound_renderer in self.sound_renderers:
@@ -125,11 +125,8 @@ class SoundManager:
         al.alSourcef(source, al.AL_ROLLOFF_FACTOR, 0.01)
         return source.value
 
-    def render_sound(self) -> bytes:
-        audio_sample = self.virtual_renderer.sample_audio()
-        float_array = array('f', audio_sample.flatten())
-        byte_data = float_array.tobytes()
-        return byte_data
+    def sample_audio(self) -> np.ndarray[np.float32]:
+        return self.virtual_renderer.sample_audio()
     
     def remove_source(self, source: AudioSource) -> None:
         for i, sound_renderer in enumerate(self.sound_renderers):
