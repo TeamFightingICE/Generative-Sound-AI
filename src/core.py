@@ -28,11 +28,13 @@ class SampleSoundGenAI(SoundGenAIInterface):
         logger.info("Initialize")
 
     def init_round(self):
-        self.sound_manager.set_source_gain(self.source_bgm, 1.0)
-        self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), STAGE_WIDTH // 2, 0, True)
-        logger.info(f"Play sound: BGM0.wav at ({STAGE_WIDTH // 2}, 0) with loop=True")
+        pass
 
     def processing_game(self, frame_data: FrameData):
+        if frame_data.current_frame_number == 0:
+            self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), STAGE_WIDTH // 2, 0, True)
+            logger.info(f"Play sound: BGM0.wav at ({STAGE_WIDTH // 2}, 0) with loop=True")
+
         for i in range(2):
             player_number = i == 0
             opponent_index = 1 if player_number else 0
