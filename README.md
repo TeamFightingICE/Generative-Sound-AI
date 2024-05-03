@@ -14,7 +14,7 @@ pip install git+https://github.com/TeamFightingICE/pyftg@dev
 
 __2. Install OpenAL Soft__
 
-- For Windows, Please copy the dll files in `lib/windows` to `C:\Windows\System32` folder
+- For Windows, Please copy the DLL files in `lib/windows` to `C:\Windows\System32` folder
 
 - For Linux (Ubuntu, other distros should be similar)
 ```
