@@ -106,7 +106,7 @@ class SoundRenderer:
         alc.alcRenderSamplesSOFT(self.device, audio_sample_pointer, al.ALsizei(SAMPLE_SIZE))
         sampled_audio = ctypes.cast(audio_sample_pointer, ctypes.POINTER(audio_data_type)).contents
 
-        separated_channel_audio = np.zeros((2, 1024), dtype=np.float32)
-        separated_channel_audio[0, :SAMPLE_SIZE] = sampled_audio[0]
-        separated_channel_audio[1, :SAMPLE_SIZE] = sampled_audio[1]
+        separated_channel_audio = np.zeros((2, SAMPLE_SIZE), dtype=np.float32)
+        separated_channel_audio[0, :] = sampled_audio[0]
+        separated_channel_audio[1, :] = sampled_audio[1]
         return separated_channel_audio

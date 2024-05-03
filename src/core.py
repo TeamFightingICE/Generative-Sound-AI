@@ -64,7 +64,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
         if ENABLE_VIRTUAL_AUDIO:
             audio_sample = self.sound_manager.sample_audio()
             return audio_sample.tobytes()
-        return bytes(8192)
+        return bytes(6400)
     
     def close(self):
         self.sound_manager.close()
