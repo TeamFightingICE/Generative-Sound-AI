@@ -10,11 +10,14 @@ pip install git+https://github.com/TeamFightingICE/pyftg@dev
 
 For Windows
 ```
+copy dll files in lib\windows\ to system32 folder
 ```
 
-For Linux
+For Linux (Ubuntu, other distros should be similar)
 ```
-
+sudo apt-add-repository universe
+sudo apt-get update
+sudo apt-get install libopenal-dev makehrtf openal-info
 ```
 
 For MacOS
