@@ -5,11 +5,11 @@ from pyftg.aiinterface.soundgenai_interface import SoundGenAIInterface
 from pyftg.models.frame_data import FrameData
 from pyftg.models.game_data import GameData
 from pyftg.models.round_result import RoundResult
-from pyftg_sound.audio_source import AudioSource
+from pyftg_sound.models.audio_source import AudioSource
 from pyftg_sound.sound_manager import SoundManager
 
 from src.character_audio_handler import CharacterAudioHandler
-from src.config import DATA_PATH, STAGE_WIDTH
+from src.config import DATA_PATH, ENABLE_AUDIO_OUTPUT, STAGE_WIDTH
 from src.utils import detection_hit
 
 
@@ -19,7 +19,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
     character_handlers: List[CharacterAudioHandler] = []
 
     def __init__(self):
-        self.sound_manager = SoundManager()
+        self.sound_manager = SoundManager(use_default_renderer=ENABLE_AUDIO_OUTPUT)
         self.sound_manager.set_listener_position(STAGE_WIDTH // 2, 0, 0)
         self.sound_manager.set_listener_orientation(0, 0, -1, 0, 1, 0)
         logger.info("Sound manager has been initialized.")

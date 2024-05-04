@@ -5,7 +5,7 @@ from pyftg.models.attack_data import AttackData
 from pyftg.models.enums.action import Action
 from pyftg.models.enums.state import State
 from pyftg.models.frame_data import CharacterData, FrameData
-from pyftg_sound.audio_source import AudioSource
+from pyftg_sound.models.audio_source import AudioSource
 from pyftg_sound.sound_manager import SoundManager
 
 from src.config import STAGE_HEIGHT, STAGE_WIDTH
