@@ -5,10 +5,10 @@ from pyftg.models.attack_data import AttackData
 from pyftg.models.enums.action import Action
 from pyftg.models.enums.state import State
 from pyftg.models.frame_data import CharacterData, FrameData
+from pyftg_sound.audio_source import AudioSource
+from pyftg_sound.sound_manager import SoundManager
 
-from src.audio_source import AudioSource
 from src.config import STAGE_HEIGHT, STAGE_WIDTH
-from src.sound_manager import SoundManager
 from src.utils import is_guard
 
 
@@ -37,9 +37,9 @@ class CharacterAudioHandler:
     source_border_alert: AudioSource
     source_heart_beat: AudioSource
 
-    def __init__(self, player: bool) -> None:
+    def __init__(self, sound_manager: SoundManager, player: bool) -> None:
+        self.sound_manager = sound_manager
         self.player = player
-        self.sound_manager = SoundManager.get_instance()
         self.source_default = self.sound_manager.create_audio_source()
         self.source_walking = self.sound_manager.create_audio_source()
         self.source_landing = self.sound_manager.create_audio_source()

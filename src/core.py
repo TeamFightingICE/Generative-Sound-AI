@@ -5,11 +5,11 @@ from pyftg.aiinterface.soundgenai_interface import SoundGenAIInterface
 from pyftg.models.frame_data import FrameData
 from pyftg.models.game_data import GameData
 from pyftg.models.round_result import RoundResult
+from pyftg_sound.audio_source import AudioSource
+from pyftg_sound.sound_manager import SoundManager
 
-from src.audio_source import AudioSource
 from src.character_audio_handler import CharacterAudioHandler
-from src.config import ENABLE_VIRTUAL_AUDIO, STAGE_WIDTH
-from src.sound_manager import SoundManager
+from src.config import DATA_PATH, STAGE_WIDTH
 from src.utils import detection_hit
 
 
@@ -19,16 +19,24 @@ class SampleSoundGenAI(SoundGenAIInterface):
     character_handlers: List[CharacterAudioHandler] = []
 
     def __init__(self):
-        self.sound_manager = SoundManager.get_instance()
+        self.sound_manager = SoundManager()
+        self.sound_manager.set_listener_position(STAGE_WIDTH // 2, 0, 0)
+        self.sound_manager.set_listener_orientation(0, 0, -1, 0, 1, 0)
+        logger.info("Sound manager has been initialized.")
+
+        for file in DATA_PATH.iterdir():
+            self.sound_manager.create_audio_buffer(file)
+        logger.info("Sound effects have been loaded.")
+
         self.source_bgm = self.sound_manager.create_audio_source()
-        self.character_handlers.append(CharacterAudioHandler(player=True))
-        self.character_handlers.append(CharacterAudioHandler(player=False))
+        self.character_handlers.append(CharacterAudioHandler(self.sound_manager, True))
+        self.character_handlers.append(CharacterAudioHandler(self.sound_manager, False))
 
     def initialize(self, game_data: GameData):
         logger.info("Initialize")
 
     def init_round(self):
-        pass
+        logger.info("Round start")
 
     def processing_game(self, frame_data: FrameData):
         if frame_data.current_frame_number == 0:
@@ -53,6 +61,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
             self.character_handlers[i].update(frame_data)
 
     def round_end(self, round_result: RoundResult):
+        logger.info("Round end")
         for i in range(2):
             self.character_handlers[i].reset()
         self.sound_manager.stop(self.source_bgm)
@@ -63,10 +72,8 @@ class SampleSoundGenAI(SoundGenAIInterface):
         logger.info("Game end")
 
     def audio_sample(self) -> bytes:
-        if ENABLE_VIRTUAL_AUDIO:
-            audio_sample = self.sound_manager.sample_audio()
-            return audio_sample.tobytes()
-        return bytes(6400)
+        audio_sample = self.sound_manager.sample_audio()
+        return audio_sample.tobytes()
     
     def close(self):
         self.sound_manager.close()
