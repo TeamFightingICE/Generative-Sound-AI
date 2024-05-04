@@ -1,4 +1,5 @@
 import ctypes
+
 from . import dll
 
 __all__ = ["AL_INVALID", "AL_NONE", "AL_TRUE", "AL_FALSE",

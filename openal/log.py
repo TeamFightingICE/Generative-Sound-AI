@@ -1,3 +1,3 @@
 import logging
 
-logger = logging.getLogger('PyAL')
+logger = logging.getLogger("PyAL")
