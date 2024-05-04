@@ -29,7 +29,7 @@ class SoundRenderer:
         device = alc.alcLoopbackOpenDeviceSOFT(None)
         attrs = [ALC_FORMAT_TYPE_SOFT, ALC_FLOAT_SOFT, ALC_FORMAT_CHANNELS_SOFT,
                  ALC_STEREO_SOFT, ALC_FREQUENCY, SOUND_SAMPLING_RATE, 0]
-        attrs_c = alc.ALCint * len(attrs)
+        attrs_c = al.ALint * len(attrs)
         attrs_c = attrs_c(*attrs)
         context = alc.alcCreateContext(device, attrs_c)
         return SoundRenderer(device, context)
@@ -75,11 +75,11 @@ class SoundRenderer:
 
     def delete_source(self, source_id: int) -> None:
         self.set()
-        al.alDeleteSources(1, alc.ALCuint(source_id))
+        al.alDeleteSources(1, al.ALuint(source_id))
 
     def delete_buffer(self, buffer_id: int) -> None:
         self.set()
-        al.alDeleteBuffers(1, alc.ALCuint(buffer_id))
+        al.alDeleteBuffers(1, al.ALuint(buffer_id))
 
     def close(self) -> None:
         self.set()
@@ -88,18 +88,18 @@ class SoundRenderer:
 
     def is_playing(self, source_id: int) -> bool:
         self.set()
-        state = alc.ALCint(0)
+        state = al.ALint(0)
         al.alGetSourcei(source_id, al.AL_SOURCE_STATE, state)
         return state.value == al.AL_PLAYING
 
     def al_listener_fv(self, param: int, values: List[float]) -> None:
         self.set()
-        values_arr = (alc.ALCfloat * len(values))(*values)
+        values_arr = (al.ALfloat * len(values))(*values)
         al.alListenerfv(param, values_arr)
 
     def sample_audio(self) -> np.ndarray[np.float32]:
         self.set()
-        audio_data_type = alc.ALCfloat * SAMPLE_SIZE * 2
+        audio_data_type = al.ALfloat * SAMPLE_SIZE * 2
         audio_sample = audio_data_type()
         audio_sample_pointer = ctypes.cast(audio_sample, ctypes.c_void_p)
 
