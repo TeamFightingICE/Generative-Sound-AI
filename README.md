@@ -28,3 +28,10 @@ sudo apt-get install libopenal-dev makehrtf openal-info
 brew install openal-soft
 echo 'export DYLD_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_LIBRARY_PATH"' >> ~/.zshrc
 ```
+
+__3. Run the generative sound AI__
+- Boot DareFightingICE.
+- Execute `main.py`.
+```
+python main.py
+```
