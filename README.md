@@ -9,7 +9,6 @@ Before setting up the project, ensure you have Python 3.12 installed on your sys
 __1. Install dependencies with pip__
 ```
 pip install -r requirements.txt
-pip install git+https://github.com/TeamFightingICE/pyftg@dev
 ```
 
 __2. Install OpenAL Soft__
