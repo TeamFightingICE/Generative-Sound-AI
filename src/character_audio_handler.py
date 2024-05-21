@@ -1,14 +1,15 @@
-from typing import Dict, List
+from typing import Dict
 
 from loguru import logger
 from pyftg.models.attack_data import AttackData
 from pyftg.models.enums.action import Action
 from pyftg.models.enums.state import State
 from pyftg.models.frame_data import CharacterData, FrameData
+from pyftg_sound.models.audio_source import AudioSource
+from pyftg_sound.sound_manager import SoundManager
 
-from src.audio_source import AudioSource
 from src.config import STAGE_HEIGHT, STAGE_WIDTH
-from src.sound_manager import SoundManager
+from src.constants import source_attrs
 from src.utils import is_guard
 
 
@@ -31,22 +32,20 @@ class CharacterAudioHandler:
     source_default: AudioSource
     source_walking: AudioSource
     source_landing: AudioSource
-    source_projectiles: List[AudioSource]
     source_projectiles_by_id: Dict[str, AudioSource]
     source_energy_change: AudioSource
     source_border_alert: AudioSource
     source_heart_beat: AudioSource
 
-    def __init__(self, player: bool) -> None:
+    def __init__(self, sound_manager: SoundManager, player: bool) -> None:
+        self.sound_manager = sound_manager
         self.player = player
-        self.sound_manager = SoundManager.get_instance()
-        self.source_default = self.sound_manager.create_audio_source()
-        self.source_walking = self.sound_manager.create_audio_source()
-        self.source_landing = self.sound_manager.create_audio_source()
-        self.source_projectiles = [self.sound_manager.create_audio_source()] * 3
-        self.source_energy_change = self.sound_manager.create_audio_source()
-        self.source_border_alert = self.sound_manager.create_audio_source()
-        self.source_heart_beat = self.sound_manager.create_audio_source()
+        self.source_default = self.sound_manager.create_audio_source(source_attrs)
+        self.source_walking = self.sound_manager.create_audio_source(source_attrs)
+        self.source_landing = self.sound_manager.create_audio_source(source_attrs)
+        self.source_energy_change = self.sound_manager.create_audio_source(source_attrs)
+        self.source_border_alert = self.sound_manager.create_audio_source(source_attrs)
+        self.source_heart_beat = self.sound_manager.create_audio_source(source_attrs)
         self.current_projectiles = {}
         self.source_projectiles_by_id = {}
 
@@ -130,7 +129,7 @@ class CharacterAudioHandler:
                     projectile_id = proj.identifier
                     if projectile_id not in self.current_projectiles.keys():
                         self.current_projectiles[projectile_id] = proj
-                        projectile_source = self.sound_manager.create_audio_source()
+                        projectile_source = self.sound_manager.create_audio_source(source_attrs)
                         self.source_projectiles_by_id[projectile_id] = projectile_source
                         self.sound_manager.play(projectile_source, self.sound_manager.get_sound_buffer(sound_name), x, y, True)
                         logger.info(f"Play sound: {sound_name} on frame {self.current_frame_number} at ({x}, {y})")
