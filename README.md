@@ -9,7 +9,7 @@ Before setting up the project, ensure you have Python 3.12 installed on your sys
 - Boot DareFightingICE
 - Run the docker container
 ```
-docker run -it --rm ghcr.io/teamfightingice/generative-sound-ai
+docker run -it --rm -e SERVER_HOST=host.docker.internal ghcr.io/teamfightingice/generative-sound-ai
 ```
 
 ## Instruction
