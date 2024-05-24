@@ -86,9 +86,7 @@ class SampleSoundGenAI(SoundGenAIInterface):
 
     def audio_sample(self) -> bytes:
         audio_sample = self.sound_manager.sample_audio(render_size=SOUND_RENDER_SIZE)
-        audio_sample_bytes = audio_sample.tobytes()
-        print("audio_sample() called at", self.frame_data.current_frame_number, "with data", audio_sample_bytes[:10])
-        return audio_sample_bytes
+        return audio_sample.tobytes()
     
     def close(self):
         self.sound_manager.close()
