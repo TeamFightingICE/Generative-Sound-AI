@@ -1,14 +1,30 @@
 # Generative-Sound-AI
 
-**Note:** This project uses Python 3.12.
+## Prerequisites
 
-First, install dependencies with pip.
+Before setting up the project, ensure you have Python 3.12 installed on your system.
+
+## Instruction
+
+__1. Install dependencies with pip__
 ```
 pip install -r requirements.txt
 pip install git+https://github.com/TeamFightingICE/pyftg@dev
 ```
 
-Run main process
+__2. Install OpenAL Soft__
+
+- For Windows, please copy the DLL files in `lib/windows` to `C:/Windows/System32` folder.
+
+- For Linux (Ubuntu, other distros should be similar)
 ```
-python main.py
+sudo apt-add-repository universe
+sudo apt-get update
+sudo apt-get install libopenal-dev makehrtf openal-info
+```
+
+- For MacOS
+```
+brew install openal-soft
+echo 'export DYLD_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_LIBRARY_PATH"' >> ~/.zshrc
 ```
