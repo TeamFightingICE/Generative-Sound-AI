@@ -2,4 +2,4 @@ typer~=0.12.3
 loguru~=0.7.2
 python-dotenv~=1.0.1
 pyftg~=2.3b0
-pyftg-sound~=0.3b0
+pyftg-sound~=0.3b1
