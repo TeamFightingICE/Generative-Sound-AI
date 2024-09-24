@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from loguru import logger
 from pyftg.models.attack_data import AttackData
 from pyftg.models.character_data import CharacterData
@@ -9,6 +11,7 @@ from src.config import ENABLE_LOGGING
 
 def setup_logging():
     if ENABLE_LOGGING:
+        Path("logs").mkdir(exist_ok=True)
         logger.add("logs/{time}.log")
     else:
         logger.disable("")

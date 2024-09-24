@@ -45,30 +45,33 @@ class SampleSoundGenAI(SoundGenAIInterface):
     def initialize(self, game_data: GameData):
         logger.info("Initialize")
 
-    def init_round(self):
-        logger.info("Round start")
+    def get_information(self, frame_data: FrameData):
+        self.frame_data = frame_data
 
-    def processing_game(self, frame_data: FrameData):
-        if frame_data.current_frame_number == 0:
+    def processing(self):
+        if self.frame_data.empty_flag or self.frame_data.current_frame_number < 0:
+            return
+
+        if self.frame_data.current_frame_number == 0:
             self.sound_manager.play(self.source_bgm, self.sound_manager.get_sound_buffer("BGM0.wav"), STAGE_WIDTH // 2, STAGE_HEIGHT // 2, True)
             logger.info(f"Play sound: BGM0.wav at ({STAGE_WIDTH // 2}, {STAGE_HEIGHT // 2}) with loop=True")
 
         for i in range(2):
             player_number = i == 0
             opponent_index = 1 if player_number else 0
-            projectiles = frame_data.get_character(player_number).projectile_attack
+            projectiles = self.frame_data.get_character(player_number).projectile_attack
             for p in projectiles:
-                if detection_hit(frame_data.get_character(not player_number), p):
+                if detection_hit(self.frame_data.get_character(not player_number), p):
                     self.character_handlers[i].hit_attack(p, self.character_handlers[opponent_index])
 
         for i in range(2):
             player_number = i == 0
             opponent_index = 1 if player_number else 0
-            attack = frame_data.get_character(player_number).attack_data
-            if detection_hit(frame_data.get_character(not player_number), attack):
+            attack = self.frame_data.get_character(player_number).attack_data
+            if detection_hit(self.frame_data.get_character(not player_number), attack):
                 self.character_handlers[i].hit_attack(attack, self.character_handlers[opponent_index])
 
-            self.character_handlers[i].update(frame_data)
+            self.character_handlers[i].update(self.frame_data)
 
     def round_end(self, round_result: RoundResult):
         logger.info("Round end")
